@@ -51,56 +51,51 @@ const VerifyEmail = () => {
   };
 
   const handleVerify = async () => {
-    const code = otp.join("");
+  const code = otp.join("").trim();
 
-    if (!email) {
-      alert("Session expired. Please register again.");
-      navigate("/register");
+  if (!email) {
+    alert("Session expired. Please register again.");
+    navigate("/register");
+    return;
+  }
+
+  if (otp.includes("")) {
+    alert("Enter full OTP");
+    return;
+  }
+
+  setIsVerifying(true);
+
+  try {
+    const res = await fetch("http://localhost:5000/api/user/verify-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        otp: code,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.msg || "Invalid OTP");
       return;
     }
 
-    if (otp.includes("")) {
-      alert("Enter full OTP");
-      return;
-    }
+    localStorage.removeItem("email");
+    alert("Email verified successfully!");
+    navigate("/", { replace: true });
 
-    setIsVerifying(true);
-
-    try {
-      const res = await fetch("http://localhost:5000/api/user/verify-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          otp: code,
-        }),
-      });
-
-      let data = {};
-      try {
-        data = await res.json();
-      } catch {
-        data = {};
-      }
-
-      if (!res.ok) {
-        alert(data.msg || "Invalid OTP");
-        return;
-      }
-
-      localStorage.removeItem("email");
-      alert("Email verified successfully!");
-      navigate("/", { replace: true });
-    } catch (err) {
-      console.log(err);
-      alert("Server error");
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
+  } catch (err) {
+    console.log(err);
+    alert("Server error");
+  } finally {
+    setIsVerifying(false);
+  }
+};
   return (
     <div style={styles.container}>
       <div style={styles.card}>

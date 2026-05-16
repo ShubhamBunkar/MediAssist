@@ -81,11 +81,19 @@ const AddMedicine = () => {
 };
 
   const styles = {
-    body: {
-      margin: "0px",
-      fontFamily: "Arial, sans-serif",
-      backgroundColor: "#ffffff",
-    },
+    
+   pageBg: {
+  minHeight: "100vh",
+  width: "100%",
+   background: `
+    radial-gradient(circle at top left, #fdba74 0%, transparent 30%),
+    radial-gradient(circle at top right, #fb923c 0%, transparent 25%),
+    linear-gradient(to bottom, #fff7ed 0%, #ffffff 55%)
+  `,
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+},
     imageContainer: {
       width: "100%",
       height: "25vh",
@@ -119,15 +127,18 @@ const AddMedicine = () => {
       marginBottom: "20px",
     },
     container: {
-      width: "100%",
-      maxWidth: "400px",
-      margin: "0 auto",
-      padding: "20px",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "flex-start",
-      gap: "12px",
-    },
+  width: "100%",
+  maxWidth: "380px",
+  minHeight: "90vh",   // ✅ changed
+  borderRadius: "25px",
+  padding: "20px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+  background: "rgba(255,255,255,0.25)",
+  backdropFilter: "blur(15px)",
+  boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+},
     field: {
       marginLeft: "0px",
       width: "100%",
@@ -165,14 +176,16 @@ const AddMedicine = () => {
       cursor: "pointer",
     },
     addBtn: {
-      marginTop: "10px",
-      padding: "10px",
-      borderRadius: "10px",
-      border: "none",
-      background: "#7c3aed",
-      color: "#fff",
-      cursor: "pointer",
-    },
+  background:
+    "linear-gradient(135deg,#22c55e,#16a34a)",
+  color: "#fff",
+  border: "2px solid #bbf7d0",
+  padding: "12px 22px",
+  borderRadius: "16px",
+  cursor: "pointer",
+  fontWeight: "700",
+  boxShadow: "0 6px 16px rgba(34,197,94,0.25)",
+},
     saveBtn: {
       position: "fixed",
       bottom: "20px",
@@ -189,7 +202,7 @@ const AddMedicine = () => {
   };
 
   return (
-    <div style={styles.body}>
+    <div style={styles.pageBg}>
       <div style={styles.container}>
         <div style={styles.header}>
           <div style={styles.topBar}>

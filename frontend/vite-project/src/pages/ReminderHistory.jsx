@@ -115,7 +115,11 @@ const ReminderHistory = () => {
 const styles = {
   container: {
     padding: "20px",
-    backgroundColor: "#f5f5f5",
+     background: `
+    radial-gradient(circle at top left, #fdba74 0%, transparent 30%),
+    radial-gradient(circle at top right, #fb923c 0%, transparent 25%),
+    linear-gradient(to bottom, #fff7ed 0%, #ffffff 55%)
+  `,
     minHeight: "100vh",
   },
   topBar: {

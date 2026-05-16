@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MediAssist</string>
+    <string name="title_activity_main">MediAssist</string>
+    <string name="package_name">com.med.app</string>
+    <string name="custom_url_scheme">com.med.app</string>
+</resources>

@@ -3,11 +3,33 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 
-import s1 from "../assets/sounds/s1.mp3";
-import s2 from "../assets/sounds/s2.mp3";
-import s3 from "../assets/sounds/s3.mp3";
-import s4 from "../assets/sounds/s4.mp3";
-import s5 from "../assets/sounds/s5.mp3";
+const tones = [
+  {
+    id: 1,
+    name: "Tone 1",
+    file: "/sounds/s1.mp3",
+  },
+  {
+    id: 2,
+    name: "Tone 2",
+    file: "/sounds/s2.mp3",
+  },
+  {
+    id: 3,
+    name: "Tone 3",
+    file: "/sounds/s3.mp3",
+  },
+  {
+    id: 4,
+    name: "Tone 4",
+    file: "/sounds/s4.mp3",
+  },
+  {
+    id: 5,
+    name: "Tone 5",
+    file: "/sounds/s5.mp3",
+  },
+];
 
 const AlarmSetting = () => {
   const [currentAudio, setCurrentAudio] = useState(null);
@@ -132,7 +154,11 @@ export default AlarmSetting;
 const styles = {
   container: {
     padding: "20px",
-    background: "#f9f9f9",
+     background: `
+    radial-gradient(circle at top left, #fdba74 0%, transparent 30%),
+    radial-gradient(circle at top right, #fb923c 0%, transparent 25%),
+    linear-gradient(to bottom, #fff7ed 0%, #ffffff 55%)
+  `,
     minHeight: "100vh",
     color: "black",
     fontFamily: "Arial",

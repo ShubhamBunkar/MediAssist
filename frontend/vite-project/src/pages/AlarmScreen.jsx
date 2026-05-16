@@ -1,143 +1,128 @@
-import React, { useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { NativeAudio } from "@capacitor-community/native-audio";
+
 const AlarmScreen = () => {
   const location = useLocation();
-const navigate = useNavigate();
+  const navigate = useNavigate();
+
   const data =
     location.state || JSON.parse(localStorage.getItem("activeAlarm")) || {};
 
-  const audioRef = useRef(null);
+  // ✅ START ALARM
+  useEffect(() => {
+    const startAlarm = async () => {
+      try {
+        // preload sound
+        await NativeAudio.preload({
+          assetId: "alarm",
+          assetPath: "public/sounds/s1.wav",
+          audioChannelNum: 1,
+          isUrl: false,
+        });
 
- useEffect(() => {
-  const audio = new Audio(data?.tone?.file || "/s1.mp3");
-  audio.loop = true;
-  audio.volume = 1;
+        // play sound
+        await NativeAudio.play({
+          assetId: "alarm",
+        });
 
-  const playSound = async () => {
+        console.log("🔊 Alarm playing");
+      } catch (err) {
+        console.log("Alarm Error:", err);
+      }
+    };
+
+    startAlarm();
+
+    // cleanup
+    return async () => {
+      try {
+        await NativeAudio.stop({
+          assetId: "alarm",
+        });
+
+        await NativeAudio.unload({
+          assetId: "alarm",
+        });
+      } catch (e) {}
+    };
+  }, []);
+
+  // ✅ STOP ALARM
+  const stopAlarm = async () => {
     try {
-      await audio.play();
-      console.log("🔊 Alarm playing");
+      await NativeAudio.stop({
+        assetId: "alarm",
+      });
+
+      await NativeAudio.unload({
+        assetId: "alarm",
+      });
     } catch (err) {
-      console.log("Autoplay blocked");
-
-      document.addEventListener(
-        "click",
-        () => {
-          audio.play();
-        },
-        { once: true }
-      );
+      console.log(err);
     }
   };
 
-  playSound();
+  // ✅ TAKE MEDS
+  const handleTakeMeds = async () => {
+    await stopAlarm();
 
-  audioRef.current = audio;
+    const reminders = JSON.parse(localStorage.getItem("reminders")) || [];
 
-  return () => {
-    audio.pause();
-    audio.currentTime = 0;
-  };
-}, [data]);
+    const updatedReminders = reminders.map((item) =>
+      item.id === data.id ? { ...item, taken: true, missed: false } : item,
+    );
 
-  const stopAlarm = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-  };
+    localStorage.setItem("reminders", JSON.stringify(updatedReminders));
 
-   
-   const handleTakeMeds = () => {
-  stopAlarm();
+    // history
+    const historyKey = `history_${data.userEmail}`;
 
-  const reminders = JSON.parse(localStorage.getItem("reminders")) || [];
+    const history = JSON.parse(localStorage.getItem(historyKey)) || [];
 
-  const updatedReminders = reminders.map((item) =>
-    item.id === data.id
-      ? { ...item, taken: true, missed: false }
-      : item
-  );
+    const today = new Date().toISOString().split("T")[0];
 
-  localStorage.setItem("reminders", JSON.stringify(updatedReminders));
+    history.unshift({
+      id: Date.now(),
+      reminderId: data.id,
+      name: data.name,
+      dosage: data.dose,
+      time: data.displayTime,
+      date: today,
+      status: "Taken",
+      userEmail: data.userEmail,
+    });
 
-  // ✅ Save to history immediately
-  const historyKey = `history_${data.userEmail}`;
-  const history = JSON.parse(localStorage.getItem(historyKey)) || [];
+    localStorage.setItem(historyKey, JSON.stringify(history));
 
-  const today = new Date().toISOString().split("T")[0];
-
-  history.unshift({
-    id: Date.now(),
-    reminderId: data.id,
-    name: data.name,
-    dosage: data.dose,
-    time: data.displayTime,
-    date: today,
-    status: "Taken",
-    userEmail: data.userEmail,
-  });
-
-  localStorage.setItem(historyKey, JSON.stringify(history));
-
-  
-};
-   const handleSnooze = () => {
-  stopAlarm();
-
-  const updated = {
-    ...data,
-    displayTime: new Date(Date.now() + 10 * 60000)
-      .toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })
-      .toUpperCase(),
+    navigate("/home");
   };
 
-  const reminders = JSON.parse(localStorage.getItem("reminders")) || [];
-
-  const updatedReminders = reminders.map((item) =>
-    item.id === data.id ? updated : item
-  );
-
-  localStorage.setItem("reminders", JSON.stringify(updatedReminders));
-
-  navigate("/home");
-};
   return (
     <div style={styles.container}>
       {/* TEXT */}
       <p style={styles.topText}>
-  Hey, {data?.name || "User"}! It's time to take your meds.
-</p>
+        Hey, {data?.name || "User"}! It's time to take your meds.
+      </p>
 
-      {/* 🔔 Bell Circle */}
+      {/* BELL */}
       <div style={styles.circleOuter}>
         <div style={styles.circleInner}>🔔</div>
       </div>
 
       {/* TIME */}
-      <p style={styles.day}>Thursday</p>
+      <p style={styles.day}>
+        {new Date().toLocaleDateString("en-US", {
+          weekday: "long",
+        })}
+      </p>
+
       <h1 style={styles.time}>{data?.time || "10:00 AM"}</h1>
 
-      {/* BUTTONS */}
-     <button
-  style={styles.takeBtn}
-  onClick={() => {
-    stopAlarm();
-    navigate("/home");
-    handleTakeMeds();
-  }}
->
-  Take Meds
-</button>
-
-      <button style={styles.snoozeBtn} onClick={handleSnooze}>
-  Snooze for 10 minutes
-</button>
+      {/* BUTTON */}
+      <button style={styles.takeBtn} onClick={handleTakeMeds}>
+        Take Meds
+      </button>
     </div>
   );
 };
@@ -146,71 +131,100 @@ const styles = {
   container: {
     height: "100vh",
     background: "#4A90E2",
+
     display: "flex",
     flexDirection: "column",
+
     alignItems: "center",
     justifyContent: "center",
+
     color: "white",
+
     textAlign: "center",
+
     padding: "20px",
   },
 
   topText: {
     fontSize: "18px",
+
     marginBottom: "30px",
+
+    fontWeight: "500",
   },
 
   circleOuter: {
     width: "180px",
     height: "180px",
+
     borderRadius: "50%",
+
     background: "rgba(255,255,255,0.2)",
+
     display: "flex",
+
     alignItems: "center",
     justifyContent: "center",
+
+    animation: "pulse 1.5s infinite",
   },
 
   circleInner: {
     width: "120px",
     height: "120px",
+
     borderRadius: "50%",
+
     background: "rgba(255,255,255,0.3)",
+
     display: "flex",
+
     alignItems: "center",
     justifyContent: "center",
+
     fontSize: "50px",
   },
 
   day: {
     marginTop: "30px",
+
     opacity: 0.9,
+
+    fontSize: "18px",
   },
 
   time: {
-    fontSize: "40px",
-    margin: "5px 0 30px",
+    fontSize: "42px",
+
+    margin: "8px 0 35px",
+
+    fontWeight: "700",
   },
 
   takeBtn: {
     width: "80%",
-    padding: "12px",
-    borderRadius: "10px",
-    border: "none",
-    background: "#fff",
-    color: "#333",
-    fontWeight: "bold",
-    marginBottom: "10px",
-    cursor: "pointer",
-  },
 
-  snoozeBtn: {
-    width: "80%",
-    padding: "12px",
-    borderRadius: "10px",
+    maxWidth: "320px",
+
+    padding: "14px",
+
+    borderRadius: "14px",
+
     border: "none",
-    background: "rgba(255,255,255,0.3)",
-    color: "#fff",
+
+    background: "#fff",
+
+    color: "#333",
+
+    fontWeight: "700",
+
+    fontSize: "17px",
+
     cursor: "pointer",
+
+    boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+
+    transition: "0.3s",
   },
 };
 

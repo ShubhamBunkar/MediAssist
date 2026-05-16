@@ -1,39 +1,45 @@
-const nodemailer = require("nodemailer");
+const SibApiV3Sdk = require("sib-api-v3-sdk");
+
+const defaultClient = SibApiV3Sdk.ApiClient.instance;
+
+const apiKey = defaultClient.authentications["api-key"];
+
+apiKey.apiKey = process.env.BREVO_API_KEY;
+
+const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
 const sendOTP = async (email, otp) => {
-  const deliveryMode = (process.env.OTP_DELIVERY || "console").toLowerCase();
-  console.log("Mode:", deliveryMode);
-  console.log("Email config:", process.env.EMAIL_USER);
-  if (deliveryMode === "console") {
-    console.log(`[OTP] ${email}: ${otp}`);
-    return { success: true, mode: "console" };
-  }
-
   try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+    const sendSmtpEmail = {
+      sender: {
+        email: "shubhambunker333@gmail.com",
+        name: "MediAssist",
       },
-    });
 
-    await transporter.sendMail({
-      from: `"MediAssist" <${process.env.EMAIL_USER}>`,
-      to: email,
+      to: [
+        {
+          email: email,
+        },
+      ],
+
       subject: "OTP Verification",
-      html: `
-    <h2>Your OTP Code</h2>
-    <h1>${otp}</h1>
-    <p>This OTP is valid for 5 minutes.</p>
-  `,
-    });
 
-    console.log("OTP sent by email");
-    return { success: true, mode: "smtp" };
-  } catch (err) {
-    console.log("Email error:", err);
-    throw new Error("Failed to send OTP email");
+      htmlContent: `
+        <h2>Your OTP Code</h2>
+        <h1>${otp}</h1>
+        <p>This OTP is valid for 5 minutes.</p>
+      `,
+    };
+
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+
+    console.log("OTP EMAIL SENT");
+
+    return { success: true };
+  } catch (error) {
+    console.log("BREVO ERROR:", error);
+
+    return { success: false };
   }
 };
 

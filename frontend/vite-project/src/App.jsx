@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "react-phone-input-2/lib/style.css";
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
@@ -12,19 +13,31 @@ import ProtectedRoute from "./ProtectedRoute";
 import AlarmScreen from "./pages/AlarmScreen";
 import VerifyEmail from "./pages/VerifyEmail";
 import PushNotification from "./pages/PushNotification";
+import ForgotPassword from "./pages/forgotpassword";
+import VerifyOtp from "./pages/verifyotp";
+import ResetPassword from "./pages/resetpassword";
+
+import GlobalAlarm from "./components/GlobalAlarm";
 
 function App() {
   return (
     <BrowserRouter>
+
+      {/* Global Alarm */}
+      <GlobalAlarm />
+
       <Routes>
 
-        {/* Public */}
+        {/* Public Routes */}
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verifyEmail" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Protected */}
+        {/* Protected Routes */}
         <Route
           path="/home"
           element={
@@ -87,7 +100,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         <Route
           path="/PushNotification"
           element={

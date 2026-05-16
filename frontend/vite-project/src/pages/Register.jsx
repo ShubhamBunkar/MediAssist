@@ -25,8 +25,12 @@ const Register = () => {
     e.preventDefault();
 
     try {
+      if (form.phone.length !== 10) {
+        alert("Phone number must be 10 digits");
+        return;
+      }
       const res = await fetch("http://localhost:5000/api/user/register", {
-        method: "POST",
+        method: "POST", // ✅ important
         headers: {
           "Content-Type": "application/json",
         },
@@ -42,20 +46,18 @@ const Register = () => {
       }
 
       if (!res.ok) {
+        console.log(data);
         alert(data.msg || "Registration failed");
         return;
       }
 
-      // ✅ Save email for OTP verification
       localStorage.setItem("email", form.email.trim().toLowerCase());
 
       alert("OTP sent to your email!");
-
-      // ✅ Go to OTP page
       navigate("/verifyEmail");
     } catch (err) {
       console.error(err);
-      alert("Server error");
+      alert(err.message || "Server error");
     }
   };
   return (
@@ -113,49 +115,48 @@ const Register = () => {
         </select>
 
         <div style={{ display: "flex", gap: "8px" }}>
+          {/* Locked Country Code */}
+          <input
+            type="text"
+            value="+91"
+            readOnly
+            style={{
+              width: "25%",
+              padding: "10px",
+              borderRadius: "15px",
+              backgroundColor: "#f0f0f0",
+              cursor: "not-allowed",
+              textAlign: "center",
+              marginBottom: "10px",
+            }}
+          />
 
-  {/* Locked Country Code */}
-  <input
-    type="text"
-    value="+91"
-    readOnly
-    style={{
-      width: "25%",
-      padding: "10px",
-      borderRadius: "15px",
-      backgroundColor: "#f0f0f0",
-      cursor: "not-allowed",
-      textAlign: "center",
-      marginBottom:"10px"
-    }}
-  />
+          {/* Phone Number */}
+          <input
+            type="text"
+            name="phone"
+            placeholder="Enter phone"
+            value={form.phone}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, "");
 
-  {/* Phone Number */}
-  <input
-    type="text"
-    name="phone"
-    placeholder="Enter phone"
-    value={form.phone}
-    onChange={(e) => {
-      const value = e.target.value.replace(/\D/g, "");
-
-      if (value.length <= 10) {
-        setForm({
-          ...form,
-          phone: value,
-        });
-      }
-    }}
-    style={{
-      width: "75%",
-      padding: "10px",
-      borderRadius: "15px",
-      marginBottom:"10px",
-    }}
-    maxLength={10}
-    required
-  />
-</div>
+              if (value.length <= 10) {
+                setForm({
+                  ...form,
+                  phone: value,
+                });
+              }
+            }}
+            style={{
+              width: "75%",
+              padding: "10px",
+              borderRadius: "15px",
+              marginBottom: "10px",
+            }}
+            maxLength={10}
+            required
+          />
+        </div>
 
         <button type="submit" style={styles.button}>
           Register

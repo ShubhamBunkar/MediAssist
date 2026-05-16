@@ -17,7 +17,11 @@ const Menu = () => {
 
   const styles = {
     container: {
-      
+       background: `
+    radial-gradient(circle at top left, #fdba74 0%, transparent 30%),
+    radial-gradient(circle at top right, #fb923c 0%, transparent 25%),
+    linear-gradient(to bottom, #fff7ed 0%, #ffffff 55%)
+  `,
       position: "relative",
       minHeight: "200vh",
       padding: "20px",

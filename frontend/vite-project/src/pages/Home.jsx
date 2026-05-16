@@ -67,6 +67,8 @@ const Home = () => {
     localStorage.setItem("reminders", JSON.stringify(updatedReminders));
   };
 
+  
+
   useEffect(() => {
     const interval = setInterval(() => {
       const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -119,6 +121,8 @@ const Home = () => {
     return () => clearInterval(interval);
   }, [userEmail]);
 
+  
+
   useEffect(() => {
     if (!userEmail) return;
     const interval = setInterval(() => {
@@ -151,6 +155,33 @@ const Home = () => {
   }, [navigate, userEmail]);
 
   useEffect(() => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    navigate("/login", { replace: true });
+    return;
+  }
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+
+    if (payload.exp * 1000 < Date.now()) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      navigate("/login", { replace: true });
+    }
+
+  } catch (err) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/login", { replace: true });
+  }
+
+}, [navigate]);
+
+  useEffect(() => {
     if (!userEmail) {
       setList([]); // clear UI after logout
       return;
@@ -164,6 +195,7 @@ const Home = () => {
   }, [location, userEmail]);
 
   return (
+    
     <div style={styles.container}>
       <button onClick={() => navigate("/Menu")} style={styles.menuBtn}>
         <FaBars />
@@ -176,13 +208,74 @@ const Home = () => {
         {getGreeting()} <span style={{ color: "#4CAF50" }}>{userName}</span>
       </h2>
       <h3> how you feel today?</h3>
+       
+       {/* HEALTH CARE ADVICE */}
+<div style={styles.healthAdviceContainer}>
+
+  <div style={styles.adviceCard}>
+    <div style={styles.adviceIcon}>💧</div>
+
+    <div>
+      <h4 style={styles.adviceTitle}>
+        Stay Hydrated
+      </h4>
+
+      <p style={styles.adviceText}>
+        Drink enough water daily
+      </p>
+    </div>
+  </div>
+
+  <div style={styles.adviceCard}>
+    <div style={styles.adviceIcon}>🥗</div>
+
+    <div>
+      <h4 style={styles.adviceTitle}>
+        Healthy Food
+      </h4>
+
+      <p style={styles.adviceText}>
+        Eat fruits & vegetables
+      </p>
+    </div>
+  </div>
+
+  <div style={styles.adviceCard}>
+    <div style={styles.adviceIcon}>🚶</div>
+
+    <div>
+      <h4 style={styles.adviceTitle}>
+        Daily Exercise
+      </h4>
+
+      <p style={styles.adviceText}>
+        Walk 20 minutes every day
+      </p>
+    </div>
+  </div>
+
+  <div style={styles.adviceCard}>
+    <div style={styles.adviceIcon}>😴</div>
+
+    <div>
+      <h4 style={styles.adviceTitle}>
+        Good Sleep
+      </h4>
+
+      <p style={styles.adviceText}>
+        Sleep 7-8 hours regularly
+      </p>
+    </div>
+  </div>
+
+</div>
 
       <h3
         style={{
-          marginTop: "20px",
+          marginTop: "50px",
           textAlign: "left",
           color: "black",
-          paddingTop: "200px",
+          paddingTop: "10px",
         }}
       >
         Today's Medicine
@@ -199,23 +292,17 @@ const Home = () => {
         ))}
       </div>
 
-      <div style={styles.bottomNav}>
-        <div
-          style={{
-            ...styles.navItem,
-            ...(location.pathname === "/home" ? styles.active : {}),
-          }}
-          onClick={() => navigate("/home")}
-        >
-          <FaHome size={18} />
-          <span>Home</span>
-        </div>
+      
+
+      
 
         <button onClick={() => navigate("/add-medicine")} style={styles.addBtn}>
           + Add Medicine
         </button>
+        
+        
       </div>
-    </div>
+    
   );
 };
 
@@ -248,11 +335,49 @@ const MedicineCard = ({ medicine, onSaveHistory, onUpdateReminder }) => {
   const { day, time } = getDateInfo();
 
   const handleTaken = () => {
+    sendCaregiverTakenMail();
     setIsTaken(true);
     setIsMissed(false);
     onUpdateReminder(medicine.id, { taken: true, missed: false });
     onSaveHistory(medicine, "Taken");
   };
+  const sendCaregiverTakenMail = async () => {
+
+  const caregiver =
+    localStorage.getItem("caregiverEmail");
+
+  if (!caregiver) return;
+
+  try {
+
+    await fetch(
+      "http://localhost:5000/api/send-caregiver-status",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          caregiverEmail: caregiver,
+
+          medicineName: medicine.name,
+
+          dose: medicine.dose,
+
+          time: medicine.displayTime,
+
+          status: "Taken",
+        }),
+      }
+    );
+
+  } catch (err) {
+
+    console.log(err);
+  }
+};
 
   return (
     <div style={styles.card}>
@@ -282,6 +407,7 @@ const MedicineCard = ({ medicine, onSaveHistory, onUpdateReminder }) => {
           <FaClock /> {medicine.displayTime}
         </button>
       )}
+      
     </div>
   );
 };
@@ -290,10 +416,40 @@ const styles = {
   container: {
     padding: "20px",
     textAlign: "center",
-    backgroundColor: "#f4f6f8",
-    minHeight: "100vh",
+     background: `
+    radial-gradient(circle at top left, #fdba74 0%, transparent 30%),
+    radial-gradient(circle at top right, #fb923c 0%, transparent 25%),
+    linear-gradient(to bottom, #fff7ed 0%, #ffffff 55%)
+  `,
+    
     paddingBottom: "80px",
+    minHeight: "90vh",
   },
+
+  suggestionCard: {
+  background: "#fff",
+  borderRadius: "24px",
+  padding: "22px",
+  marginTop: "20px",
+  boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+},
+
+suggestionTitle: {
+  color: "#ea580c",
+  marginBottom: "15px",
+  fontSize: "20px",
+  fontWeight: "700",
+},
+
+suggestionItem: {
+  background: "#fff7ed",
+  padding: "14px",
+  borderRadius: "14px",
+  marginBottom: "12px",
+  color: "#444",
+  fontWeight: "500",
+  border: "1px solid #fed7aa",
+},
   menuBtn: {
     position: "absolute",
     top: "20px",
@@ -325,19 +481,42 @@ const styles = {
     height: "100%",
     objectFit: "cover",
   },
-  addBtn: {
-    padding: "12px",
-    backgroundColor: "#16a34a",
-    color: "#fff",
-    border: "none",
-    borderRadius: "10px",
-    cursor: "pointer",
-    marginTop: "10px",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "flexEnd",
-    height: "vh",
-  },
+addBtn: {
+  position: "fixed",
+
+  left: "50%",
+  transform: "translateX(-50%)",
+
+  bottom: "20px",
+
+  background:
+    "linear-gradient(135deg,#22c55e,#16a34a)",
+
+  color: "#fff",
+
+  border: "4px solid #ffffff",
+
+  padding: "14px 28px",
+
+  borderRadius: "18px",
+
+  cursor: "pointer",
+
+  fontWeight: "700",
+
+  boxShadow:
+    "0 10px 24px rgba(34,197,94,0.35)",
+
+  fontSize: "16px",
+
+  zIndex: 9999,
+
+  minWidth: "220px",
+
+  textAlign: "center",
+
+  transition: "all 0.3s ease",
+},
   cardContainer: {
     display: "flex",
     gap: "15px",
@@ -408,17 +587,29 @@ const styles = {
     cursor: "pointer",
   },
   bottomNav: {
-    position: "fixed",
-    bottom: 0,
-    left: 0,
-    width: "100%",
-    height: "60px",
-    backgroundColor: "#fff",
-    display: "flex",
-    justifyContent: "space-around",
-    alignItems: "center",
-    borderTop: "2px solid #ccc",
-  },
+  position: "fixed",
+  bottom: "18px",
+  left: "50%",
+  transform: "translateX(-50%)",
+
+  width: "92%",
+  maxWidth: "500px",
+
+  height: "72px",
+  background: "#ffffff",
+
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+
+  padding: "0 18px",
+
+  borderRadius: "24px",
+
+  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+
+  zIndex: 999,
+},
   navItem: {
     display: "flex",
     flexDirection: "column",
@@ -430,6 +621,55 @@ const styles = {
     color: "#2563eb",
     fontWeight: "bold",
   },
+
+ healthAdviceContainer: {
+  display: "grid",
+  gridTemplateColumns:
+    "repeat(auto-fit, minmax(170px, 1fr))",
+  gap: "12px",
+  marginTop: "20px",
+  marginBottom: "20px",
+},
+
+adviceCard: {
+  background:
+    "linear-gradient(135deg,#ffffff,#fff7ed)",
+  borderRadius: "18px",
+  padding: "12px",
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+  border: "1px solid #fed7aa",
+},
+
+adviceIcon: {
+  width: "42px",
+  height: "42px",
+  borderRadius: "12px",
+  background:
+    "linear-gradient(135deg,#fb923c,#f97316)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "20px",
+  color: "#fff",
+  flexShrink: 0,
+},
+
+adviceTitle: {
+  margin: 0,
+  fontSize: "14px",
+  fontWeight: "700",
+  color: "#111827",
+},
+
+adviceText: {
+  margin: "4px 0 0 0",
+  fontSize: "11px",
+  color: "#6b7280",
+  lineHeight: "15px",
+},
 };
 
 export default Home;

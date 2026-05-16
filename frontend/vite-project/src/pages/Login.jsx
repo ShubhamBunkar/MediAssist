@@ -11,25 +11,7 @@ const Login = () => {
     password: "",
   });
 
-  // ✅ Auto redirect if logged in
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-
-        if (payload.exp * 1000 > Date.now()) {
-          navigate("/home", { replace: true });
-        } else {
-          localStorage.removeItem("token");
-        }
-      } catch {
-        localStorage.removeItem("token");
-      }
-    }
-  }, [navigate]);
-
+  
   // ✅ Auto fill email (optional)
   useEffect(() => {
     const savedUser = JSON.parse(localStorage.getItem("user"));
@@ -61,38 +43,27 @@ const Login = () => {
         body: JSON.stringify(form),
       });
 
-      let data;
-try {
-  data = await res.json();
-} catch {
-  alert("Invalid server response");
-  return;
-}
+      const data = await res.json();
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
 
-      if (!res.ok) {
-        alert(data.msg);
-        return;
+        alert("Login successful!");
+
+        setTimeout(() => {
+          navigate("/home", { replace: true });
+        }, 300);
+      } else {
+        alert(data.message || "Login failed");
       }
-
-      // ✅ SAVE DATA
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      alert("Login successful!");
-
-      navigate("/home", { replace: true });
-
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.log(error);
       alert("Server error");
     }
   };
 
-
-
   return (
     <div style={styles.container}>
-       
       <form onSubmit={handleSubmit} style={styles.form}>
         <img src={logo} alt="App Logo" style={styles.logo} />
         <h2>Login</h2>
@@ -116,7 +87,15 @@ try {
           style={styles.input}
           required
         />
-
+        <div
+  style={{
+    textAlign: "left",
+    marginTop: "8px",
+    marginBottom: "15px",
+  }}
+>
+  <Link to="/forgot-password">Forgot Password?</Link>
+</div>
         <button type="submit" style={styles.button}>
           Login
         </button>
@@ -138,12 +117,12 @@ const styles = {
     backgroundColor: "#f5f5f5",
   },
   logo: {
-  width: "150px",
-  height: "200px",
-  objectFit: "contain",
-  display: "block",
-  margin: "0 auto 15px auto", // center horizontally
-},
+    width: "150px",
+    height: "200px",
+    objectFit: "contain",
+    display: "block",
+    margin: "0 auto 15px auto", // center horizontally
+  },
   form: {
     padding: "30px",
     borderRadius: "10px",
